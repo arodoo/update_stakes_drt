@@ -3,16 +3,18 @@ Local rollback process handler
 """
 from application.user_interaction_service import UserInteractionService
 from application.local_rollback_handler_continuation import LocalRollbackHandlerContinuation
+from domain.services.content_comparison_service import ContentComparisonService
 
 
 class LocalRollbackHandler:
     """Handles the rollback from local XLSX files workflow"""
-    
+
     def __init__(self, update_service, local_rollback_service):
         self.update_service = update_service
         self.local_rollback_service = local_rollback_service
         self.ui = UserInteractionService()
         self.continuation = LocalRollbackHandlerContinuation(update_service, local_rollback_service)
+        self.content_comparison = ContentComparisonService(update_service.db, local_rollback_service)
     
     def execute(self):
         """Execute the local rollback process"""
@@ -34,28 +36,41 @@ class LocalRollbackHandler:
         for table, count in old_data.items():
             print(f"   ✓ {table}.xlsx (old): {count} records read")
         return old_data
-
+    
     def _show_comparison(self, old_data):
         """Show current vs old XLSX comparison"""
-        print("\n2. DETAILED COMPARISON ANALYSIS:")
+        print("\n2. DETAILED CONTENT COMPARISON ANALYSIS:")
         current_info = self.update_service.get_current_table_info()
-        print("   Table               | Current   | Old XLSX  | Difference | Records Added/Removed")
-        print("   -------------------|-----------|-----------|------------|----------------------")
-        total_affected = 0
+        
+        print("   Table               | Current   | Old XLSX  | Count Diff | Changed Records")
+        print("   -------------------|-----------|-----------|------------|----------------")
+        
+        total_changed_records = 0
+        
         for table in ['bamboopattern', 'map', 'centerpos2x', 'largescreenpixelpos']:
             current_count = current_info.get(table, 0)
             old_count = old_data.get(table, 0)
-            difference = old_count - current_count
-            total_affected += abs(difference)
-            if difference > 0:
-                action = f"+{difference:,} will be ADDED"
-            elif difference < 0:
-                action = f"{abs(difference):,} will be REMOVED"
+            count_difference = old_count - current_count
+            
+            print(f"   {table:<18} | {current_count:>9,} | {old_count:>9,} | {count_difference:>+10,} | Analyzing...")
+            
+            # Perform actual content comparison
+            comparison_result = self.content_comparison.compare_table_content(table)
+            
+            if 'error' in comparison_result:
+                changed_records_info = f"Error: {comparison_result['error'][:30]}..."
             else:
-                action = "No change"
-            # Show full numbers without width limits
-            print(f"   {table:<18} | {current_count:>9,} | {old_count:>9,} | {difference:>+10,} | {action}")
-        print(f"\n   📊 SUMMARY:")
-        print(f"   • Total records that will be affected: {total_affected:,}")
-        print(f"   • Tables that will change: {sum(1 for table in ['bamboopattern', 'map', 'centerpos2x', 'largescreenpixelpos'] if current_info.get(table, 0) != old_data.get(table, 0))}/4")
+                changed_records = comparison_result['content_differences']
+                total_changed_records += changed_records
+                changed_records_info = f"{changed_records:,} records differ"
+            
+            # Update the line with actual results
+            print(f"\r   {table:<18} | {current_count:>9,} | {old_count:>9,} | {count_difference:>+10,} | {changed_records_info}")
+        
+        print(f"\n   📊 CONTENT ANALYSIS SUMMARY:")
+        print(f"   • Total records with different CONTENT: {total_changed_records:,}")
+        print(f"   • This means {total_changed_records:,} records will be CHANGED in rollback")
+        print(f"   • Operation: FULL TABLE REPLACEMENT (DELETE current + INSERT old)")
+        print(f"   ⚠️  ALL current data will be replaced with old XLSX data")
+        
         return current_info

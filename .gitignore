@@ -1,2 +1,3 @@
 documentation/
 *.sql
+app/domain/__pycache__/

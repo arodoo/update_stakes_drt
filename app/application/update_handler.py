@@ -7,13 +7,13 @@ from application.update_handler_continuation import UpdateHandlerContinuation
 
 class UpdateHandler:
     """Handles the update process workflow"""
-    
+
     def __init__(self, backup_service, update_service, xlsx_reader):
         self.backup_service = backup_service
         self.update_service = update_service
         self.xlsx_reader = xlsx_reader
         self.ui = UserInteractionService()
-        self.continuation = UpdateHandlerContinuation(update_service)
+        self.continuation = UpdateHandlerContinuation(update_service, xlsx_reader)
     
     def execute(self):
         """Execute the update process"""
