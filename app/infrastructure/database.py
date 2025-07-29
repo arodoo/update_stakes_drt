@@ -2,21 +2,26 @@
 Database connection infrastructure
 """
 import pymysql
+import os
 from config.database_config import DATABASE_CONFIG
+from config.local_database_config import LOCAL_DATABASE_CONFIG
 
 
 class DatabaseConnection:
     """Handles database connection and operations"""
     
-    def __init__(self):
+    def __init__(self, use_local=True):
         self.connection = None
+        # Use local config by default, remote if use_local=False
+        self.config = LOCAL_DATABASE_CONFIG if use_local else DATABASE_CONFIG
         self.connect()
     
     def connect(self):
         """Establish database connection"""
         try:
-            self.connection = pymysql.connect(**DATABASE_CONFIG)
-            print("Database connection established")
+            self.connection = pymysql.connect(**self.config)
+            db_name = self.config['database']
+            print(f"Database connection established to: {db_name}")
         except Exception as e:
             print(f"Database connection error: {e}")
             raise

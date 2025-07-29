@@ -1,42 +1,57 @@
 """
-Main application entry point for CCM database connection
+Main application entry point - Database Management Tool
 """
-from infrastructure.database import DatabaseConnection
-from domain.services.bamboo_service import BambooService
-from domain.services.map_service import MapService
+import sys
+from application.command_handler import CommandHandler
+from application.help_service import HelpService
 
 
 def main():
     """Main application function"""
-    try:
-        # Initialize database connection
-        db_connection = DatabaseConnection()
-        
-        # Initialize services
-        bamboo_service = BambooService(db_connection)
-        map_service = MapService(db_connection)
-        
-        # Test connections
-        print("Testing database connection...")
-        if db_connection.test_connection():
-            print("✓ Database connection successful!")
-            
-            # Example operations
-            print("\nTesting services...")
-            bamboo_count = bamboo_service.get_total_count()
-            map_count = map_service.get_total_count()
-            
-            print(f"Bamboo patterns: {bamboo_count}")
-            print(f"Map entries: {map_count}")
-            
+    valid_commands = ['update', 'rollback', 'rollback_from_local', 'help']
+    valid_targets = ['local', 'remote']
+    
+    # Parse arguments: python main.py [command] [database_target]
+    if len(sys.argv) < 2:
+        HelpService.show_help()
+        return
+    
+    command = sys.argv[1]
+    
+    if command not in valid_commands:
+        HelpService.show_help()
+        return
+    
+    if command == 'help':
+        HelpService.show_help()
+        return
+    
+    # Check for database target (default to local)
+    database_target = 'local'  # default
+    if len(sys.argv) >= 3:
+        if sys.argv[2] in valid_targets:
+            database_target = sys.argv[2]
         else:
-            print("✗ Database connection failed!")
+            print(f"❌ Invalid database target: {sys.argv[2]}")
+            print(f"Valid targets: {', '.join(valid_targets)}")
+            return
+    
+    use_local = (database_target == 'local')
+    
+    print(f"🔗 Connecting to: {database_target.upper()} database")
+    
+    try:
+        handler = CommandHandler(use_local=use_local)
+        
+        if command == 'update':
+            handler.handle_update()
+        elif command == 'rollback':
+            handler.handle_rollback()
+        elif command == 'rollback_from_local':
+            handler.handle_rollback_from_local()
             
     except Exception as e:
         print(f"Application error: {e}")
-    finally:
-        if 'db_connection' in locals():
-            db_connection.close()
 
 
 if __name__ == "__main__":
