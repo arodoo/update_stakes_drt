@@ -8,11 +8,11 @@ class UpdateServiceContinuation:
     def __init__(self, db_connection):
         self.db = db_connection
         self.tables = ['bamboopattern', 'map', 'centerpos2x', 'largescreenpixelpos']
-    
+
     def show_rollback_comparison(self, current_info, backup_info):
         """Show comparison for rollback"""
-        print("   Table               | Current | Backup | Difference | Records Added/Removed")
-        print("   -------------------|---------|--------|------------|----------------------")
+        print("   Table               | Current   | Backup    | Difference | Records Added/Removed")
+        print("   -------------------|-----------|-----------|------------|----------------------")
         
         total_affected = 0
         
@@ -23,13 +23,14 @@ class UpdateServiceContinuation:
             total_affected += abs(difference)
             
             if difference > 0:
-                action = f"+{difference} will be RESTORED"
+                action = f"+{difference:,} will be RESTORED"
             elif difference < 0:
-                action = f"{abs(difference)} will be REMOVED"
+                action = f"{abs(difference):,} will be REMOVED"
             else:
                 action = "No change"
             
-            print(f"   {table:<18} | {current_count:7} | {backup_count:6} | {difference:+10} | {action}")
+            # Show full numbers without width limits
+            print(f"   {table:<18} | {current_count:>9,} | {backup_count:>9,} | {difference:>+10,} | {action}")
         
         print(f"\n   📊 ROLLBACK SUMMARY:")
         print(f"   • Total records that will be affected: {total_affected:,}")

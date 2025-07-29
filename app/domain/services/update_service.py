@@ -13,8 +13,8 @@ class UpdateService:
     
     def show_comparison(self, backup_info, xlsx_data):
         """Show comparison between backup and XLSX data"""
-        print("   Table               | Current | New XLSX | Difference | Records Added/Removed")
-        print("   -------------------|---------|----------|------------|----------------------")
+        print("   Table               | Current   | New XLSX  | Difference | Records Added/Removed")
+        print("   -------------------|-----------|-----------|------------|----------------------")
         
         total_affected = 0
         
@@ -25,13 +25,14 @@ class UpdateService:
             total_affected += abs(difference)
             
             if difference > 0:
-                action = f"+{difference} will be ADDED"
+                action = f"+{difference:,} will be ADDED"
             elif difference < 0:
-                action = f"{difference} will be REMOVED"
+                action = f"{abs(difference):,} will be REMOVED"
             else:
                 action = "No change"
             
-            print(f"   {table:<18} | {backup_count:7} | {xlsx_count:8} | {difference:+10} | {action}")
+            # Show full numbers without width limits
+            print(f"   {table:<18} | {backup_count:>9,} | {xlsx_count:>9,} | {difference:>+10,} | {action}")
         
         print(f"\n   📊 SUMMARY:")
         print(f"   • Total records that will be affected: {total_affected:,}")

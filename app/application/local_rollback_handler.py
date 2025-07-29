@@ -39,8 +39,8 @@ class LocalRollbackHandler:
         """Show current vs old XLSX comparison"""
         print("\n2. DETAILED COMPARISON ANALYSIS:")
         current_info = self.update_service.get_current_table_info()
-        print("   Table               | Current | Old XLSX | Difference | Records Added/Removed")
-        print("   -------------------|---------|----------|------------|----------------------")
+        print("   Table               | Current   | Old XLSX  | Difference | Records Added/Removed")
+        print("   -------------------|-----------|-----------|------------|----------------------")
         total_affected = 0
         for table in ['bamboopattern', 'map', 'centerpos2x', 'largescreenpixelpos']:
             current_count = current_info.get(table, 0)
@@ -48,12 +48,13 @@ class LocalRollbackHandler:
             difference = old_count - current_count
             total_affected += abs(difference)
             if difference > 0:
-                action = f"+{difference} will be ADDED"
+                action = f"+{difference:,} will be ADDED"
             elif difference < 0:
-                action = f"{difference} will be REMOVED"
+                action = f"{abs(difference):,} will be REMOVED"
             else:
                 action = "No change"
-            print(f"   {table:<18} | {current_count:7} | {old_count:8} | {difference:+10} | {action}")
+            # Show full numbers without width limits
+            print(f"   {table:<18} | {current_count:>9,} | {old_count:>9,} | {difference:>+10,} | {action}")
         print(f"\n   📊 SUMMARY:")
         print(f"   • Total records that will be affected: {total_affected:,}")
         print(f"   • Tables that will change: {sum(1 for table in ['bamboopattern', 'map', 'centerpos2x', 'largescreenpixelpos'] if current_info.get(table, 0) != old_data.get(table, 0))}/4")
