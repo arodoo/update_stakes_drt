@@ -10,28 +10,13 @@ class LocalRollbackHandlerContinuation:
 
     def execute_local_rollback(self, old_data):
         """Execute the local rollback (placeholder for actual implementation)"""
-        print("\n3. EXECUTING ROLLBACK FROM LOCAL XLSX...")
-        print("   📋 DETAILED EXECUTION PLAN:")
-
-        total_operations = 0
-
-        # This would contain the actual rollback logic using old XLSX data
-        # For now, showing what would happen
-        for table, count in old_data.items():
-            if count > 0:
-                print(f"   ✓ {table}:")
-                print(f"     • DELETE all current records")
-                print(f"     • INSERT {count:,} records from old XLSX")
-                print(f"     • Net effect: Table will have {count:,} records")
-                total_operations += count
-            else:
-                print(f"   ⚠️  {table}: No old data to restore - table will be EMPTY!")
-
-        print(f"\n   📊 EXECUTION SUMMARY:")
-        print(f"   • Total records to be processed: {total_operations:,}")
-        print(f"   • Operation type: FULL TABLE REPLACEMENT")
-        print(f"   • Source: Local XLSX files from documentation/old_data/")
-        print("   • This will completely replace current table contents")
+        print("\n3. Executing rollback from local XLSX...")
+        
+        total_operations = sum(old_data.values())
+        table_count = len([count for count in old_data.values() if count > 0])
+        
+        print(f"   ✓ Processing {table_count} tables with {total_operations:,} total records")
+        print(f"   ✓ Source: Local XLSX files from documentation/old_data/")
 
         print("\n✓ Local rollback simulation completed!")
         print("   (Actual implementation would update database tables)")
